@@ -596,3 +596,729 @@ Se o ambiente estiver **10/10**, você concluiu o Kubernetes Capture The Flag.
 **Observe → Investigue → Entenda → Corrija → Valide**
 
 </div>
+
+---
+
+# 📚 Referência rápida de `kubectl`
+
+Travou ou esqueceu a sintaxe de algum comando?
+
+Abaixo estão alguns dos comandos utilizados durante o curso. Esta seção funciona como uma **referência rápida** durante o desafio.
+
+> 💡 Os comandos abaixo não estão necessariamente na ordem em que serão utilizados e nem todos serão necessários.
+
+---
+
+<details>
+<summary>🔎 Visualizar recursos</summary>
+
+### Listar recursos
+
+```bash
+kubectl get pods
+kubectl get deployments
+kubectl get replicasets
+kubectl get services
+kubectl get configmaps
+kubectl get secrets
+kubectl get pvc
+kubectl get pv
+```
+
+Utilizando o namespace do desafio:
+
+```bash
+kubectl -n ctf get pods
+```
+
+Listar vários recursos:
+
+```bash
+kubectl -n ctf get pods,deploy,rs,svc
+```
+
+Visão geral:
+
+```bash
+kubectl -n ctf get all
+```
+
+Mais informações:
+
+```bash
+kubectl -n ctf get pods -o wide
+```
+
+Mostrar labels:
+
+```bash
+kubectl -n ctf get pods --show-labels
+```
+
+Filtrar por label:
+
+```bash
+kubectl -n ctf get pods -l app=web
+```
+
+---
+
+### Visualizar YAML de um recurso
+
+```bash
+kubectl -n ctf get pod <nome> -o yaml
+```
+
+Exemplos:
+
+```bash
+kubectl -n ctf get deployment web -o yaml
+
+kubectl -n ctf get service web -o yaml
+```
+
+</details>
+
+---
+
+<details>
+<summary>🩺 Investigar problemas</summary>
+
+### Describe
+
+Mostra configuração, estado e eventos relacionados ao recurso.
+
+```bash
+kubectl -n ctf describe pod <nome>
+```
+
+Também pode ser utilizado com outros recursos:
+
+```bash
+kubectl -n ctf describe deployment web
+
+kubectl -n ctf describe service web
+
+kubectl -n ctf describe pvc app-data
+```
+
+---
+
+### Logs
+
+```bash
+kubectl -n ctf logs <pod>
+```
+
+Para acompanhar continuamente:
+
+```bash
+kubectl -n ctf logs -f <pod>
+```
+
+Quando houver mais de um container:
+
+```bash
+kubectl -n ctf logs <pod> -c <container>
+```
+
+---
+
+### Observar mudanças
+
+```bash
+kubectl -n ctf get pods -w
+```
+
+Pressione `CTRL+C` para sair.
+
+</details>
+
+---
+
+<details>
+<summary>💻 Executar comandos dentro de containers</summary>
+
+### Executar um comando
+
+```bash
+kubectl -n ctf exec <pod> -- <comando>
+```
+
+Exemplo:
+
+```bash
+kubectl -n ctf exec <pod> -- env
+```
+
+---
+
+### Abrir um shell
+
+```bash
+kubectl -n ctf exec -it <pod> -- sh
+```
+
+Depois você poderá executar comandos diretamente dentro do container:
+
+```bash
+env
+
+ls
+
+cat /caminho/arquivo
+```
+
+Para sair:
+
+```bash
+exit
+```
+
+---
+
+### Executar utilizando um Deployment
+
+Também é possível utilizar o nome do Deployment:
+
+```bash
+kubectl -n ctf exec deploy/web -- env
+```
+
+</details>
+
+---
+
+<details>
+<summary>⚙️ Deployment e ReplicaSet</summary>
+
+### Visualizar Deployment
+
+```bash
+kubectl -n ctf get deployment
+```
+
+```bash
+kubectl -n ctf describe deployment web
+```
+
+---
+
+### Alterar quantidade de réplicas
+
+```bash
+kubectl -n ctf scale deployment web --replicas=<quantidade>
+```
+
+---
+
+### Acompanhar rollout
+
+```bash
+kubectl -n ctf rollout status deployment/web
+```
+
+Histórico:
+
+```bash
+kubectl -n ctf rollout history deployment/web
+```
+
+Desfazer última alteração:
+
+```bash
+kubectl -n ctf rollout undo deployment/web
+```
+
+---
+
+### Reiniciar os Pods de um Deployment
+
+```bash
+kubectl -n ctf rollout restart deployment/web
+```
+
+</details>
+
+---
+
+<details>
+<summary>✏️ Editar recursos</summary>
+
+### Editar diretamente no cluster
+
+```bash
+kubectl -n ctf edit deployment web
+```
+
+Outros exemplos:
+
+```bash
+kubectl -n ctf edit service web
+
+kubectl -n ctf edit configmap <nome>
+```
+
+Ao salvar o arquivo, o Kubernetes recebe a nova configuração.
+
+---
+
+### Aplicar um arquivo YAML
+
+```bash
+kubectl apply -f arquivo.yaml
+```
+
+---
+
+### Verificar alterações no Deployment
+
+```bash
+kubectl -n ctf rollout status deployment/web
+```
+
+E acompanhe os Pods:
+
+```bash
+kubectl -n ctf get pods -w
+```
+
+</details>
+
+---
+
+<details>
+<summary>🌐 Services, Labels e Endpoints</summary>
+
+### Listar Services
+
+```bash
+kubectl -n ctf get services
+```
+
+Forma abreviada:
+
+```bash
+kubectl -n ctf get svc
+```
+
+---
+
+### Visualizar labels dos Pods
+
+```bash
+kubectl -n ctf get pods --show-labels
+```
+
+---
+
+### Visualizar configuração do Service
+
+```bash
+kubectl -n ctf get service web -o yaml
+```
+
+Ou:
+
+```bash
+kubectl -n ctf describe service web
+```
+
+---
+
+### Verificar Endpoints
+
+```bash
+kubectl -n ctf get endpoints
+```
+
+Ou para um Service específico:
+
+```bash
+kubectl -n ctf get endpoints web
+```
+
+Também é possível visualizar EndpointSlices:
+
+```bash
+kubectl -n ctf get endpointslices
+```
+
+---
+
+### Testar um Service de dentro do cluster
+
+Você pode criar temporariamente um Pod cliente:
+
+```bash
+kubectl -n ctf run cliente \
+  --rm -it \
+  --restart=Never \
+  --image=busybox:1.37 \
+  -- sh
+```
+
+Dentro dele, por exemplo:
+
+```bash
+wget -qO- http://<service>
+```
+
+Para sair:
+
+```bash
+exit
+```
+
+O Pod temporário será removido automaticamente.
+
+</details>
+
+---
+
+<details>
+<summary>🗂️ ConfigMaps e Secrets</summary>
+
+### ConfigMaps
+
+Listar:
+
+```bash
+kubectl -n ctf get configmaps
+```
+
+Visualizar:
+
+```bash
+kubectl -n ctf describe configmap <nome>
+```
+
+Ou:
+
+```bash
+kubectl -n ctf get configmap <nome> -o yaml
+```
+
+---
+
+### Secrets
+
+Listar:
+
+```bash
+kubectl -n ctf get secrets
+```
+
+Visualizar:
+
+```bash
+kubectl -n ctf get secret <nome> -o yaml
+```
+
+> ⚠️ Lembre-se: valores presentes em `data` normalmente estão codificados em Base64.
+
+No Linux, um valor Base64 pode ser decodificado com:
+
+```bash
+echo '<valor>' | base64 -d
+```
+
+Também é possível extrair um campo utilizando JSONPath:
+
+```bash
+kubectl -n ctf get secret <nome> \
+  -o jsonpath='{.data.<chave>}'
+```
+
+</details>
+
+---
+
+<details>
+<summary>💾 PVC, PV e Storage</summary>
+
+### PersistentVolumeClaims
+
+```bash
+kubectl -n ctf get pvc
+```
+
+Detalhes:
+
+```bash
+kubectl -n ctf describe pvc <nome>
+```
+
+---
+
+### PersistentVolumes
+
+```bash
+kubectl get pv
+```
+
+> 💡 PV é um recurso de cluster e não pertence a um namespace.
+
+---
+
+### StorageClasses
+
+```bash
+kubectl get storageclass
+```
+
+Forma abreviada:
+
+```bash
+kubectl get sc
+```
+
+---
+
+### Visualizar configuração de volumes de um Pod
+
+```bash
+kubectl -n ctf get pod <nome> -o yaml
+```
+
+Ou:
+
+```bash
+kubectl -n ctf describe pod <nome>
+```
+
+Procure informações relacionadas a:
+
+```text
+Volumes
+Mounts
+PersistentVolumeClaim
+```
+
+</details>
+
+---
+
+<details>
+<summary>❤️ Probes e estado dos Pods</summary>
+
+### Estado dos Pods
+
+```bash
+kubectl -n ctf get pods
+```
+
+Observe principalmente:
+
+```text
+READY
+STATUS
+RESTARTS
+```
+
+---
+
+### Investigar uma Probe
+
+```bash
+kubectl -n ctf describe pod <nome>
+```
+
+Procure:
+
+```text
+Readiness
+Liveness
+Events
+```
+
+---
+
+### Ver configuração declarada no Deployment
+
+```bash
+kubectl -n ctf get deployment web -o yaml
+```
+
+Procure pelos campos:
+
+```yaml
+readinessProbe:
+
+livenessProbe:
+```
+
+</details>
+
+---
+
+<details>
+<summary>📊 CPU e Memória</summary>
+
+### Visualizar resources do Deployment
+
+```bash
+kubectl -n ctf describe deployment web
+```
+
+Ou:
+
+```bash
+kubectl -n ctf get deployment web -o yaml
+```
+
+Procure:
+
+```yaml
+resources:
+  requests:
+  limits:
+```
+
+---
+
+### CPU
+
+```text
+1000m = 1 CPU
+500m  = 0.5 CPU
+100m  = 0.1 CPU
+50m   = 0.05 CPU
+```
+
+---
+
+### Memória
+
+Valores comuns:
+
+```text
+32Mi
+64Mi
+128Mi
+256Mi
+512Mi
+1Gi
+```
+
+</details>
+
+---
+
+<details>
+<summary>🧰 Comandos rápidos que podem salvar seu CTF</summary>
+
+Ver tudo:
+
+```bash
+kubectl -n ctf get all
+```
+
+Pods + labels:
+
+```bash
+kubectl -n ctf get pods --show-labels
+```
+
+Investigar Pod:
+
+```bash
+kubectl -n ctf describe pod <nome>
+```
+
+Ver Deployment:
+
+```bash
+kubectl -n ctf get deploy web -o yaml
+```
+
+Editar Deployment:
+
+```bash
+kubectl -n ctf edit deploy web
+```
+
+Editar Service:
+
+```bash
+kubectl -n ctf edit svc web
+```
+
+Endpoints:
+
+```bash
+kubectl -n ctf get endpoints web
+```
+
+Storage:
+
+```bash
+kubectl -n ctf get pvc
+kubectl get pv
+```
+
+Entrar no container:
+
+```bash
+kubectl -n ctf exec -it <pod> -- sh
+```
+
+Acompanhar Pods:
+
+```bash
+kubectl -n ctf get pods -w
+```
+
+Validar o desafio:
+
+```bash
+ctf-check
+```
+
+</details>
+
+---
+
+## 🧠 Não sabe qual comando usar?
+
+Pense primeiro **no recurso que você está investigando**:
+
+```text
+O Pod não está saudável?
+        │
+        └── describe / logs
+
+O Deployment está incorreto?
+        │
+        └── get / describe / edit
+
+O Service não encontra os Pods?
+        │
+        └── labels / selector / endpoints
+
+Precisa verificar configuração?
+        │
+        └── ConfigMap / Secret
+
+Problema com dados?
+        │
+        └── PVC / PV / volumes
+
+Precisa olhar dentro da aplicação?
+        │
+        └── exec
+
+Alterou o Deployment?
+        │
+        └── rollout / get pods -w
+```
+
+> A ferramenta mais importante do desafio não é decorar comandos: é saber **o que investigar em seguida**.
+
+---
+
+<div align="center">
+
+### ☸️ Observe → Investigue → Entenda → Corrija → Valide
+
+</div>
